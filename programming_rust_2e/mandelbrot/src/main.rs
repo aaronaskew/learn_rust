@@ -1,5 +1,7 @@
 use num::Complex;
 
+//let mut _verbosity = false;
+
 /// Try to determine if `c` is in the Mandelbrot set, using at most `limit`
 /// iterations to decide.
 ///
@@ -53,10 +55,7 @@ fn test_parse_pair() {
 
 /// Parse a pair of floating-point numbers separated by a comma as a complex number.
 fn parse_complex(s: &str) -> Option<Complex<f64>> {
-    match parse_pair(&s, ',') {
-        Some((re, im)) => Some(Complex { re, im }),
-        None => None,
-    }
+    parse_pair(s, ',').map(|(re, im)| Complex { re, im })
 }
 
 #[test]
@@ -150,14 +149,9 @@ fn write_image(
 
     let encoder = PNGEncoder::new(output);
 
-    encoder.encode(
-        &pixels,
-        bounds.0 as u32,
-        bounds.1 as u32,
-        ColorType::Gray(8),
-    )?;
+    encoder.encode(pixels, bounds.0 as u32, bounds.1 as u32, ColorType::Gray(8))?;
 
-    return Ok(());
+    Ok(())
 }
 
 use std::env;
@@ -166,7 +160,8 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     if args.len() != 5 {
-        eprintln!("Usage: {} FILE PIXELS UPPERLEFT LOWERRIGHT", args[0]);
+        eprintln!("Usage: {} FILE PIXELS UPPERLEFT LOWERRIGHT [-V]", args[0]);
+        eprintln!("\t-V (optional) verbose output");
         eprintln!(
             "Example: {} mandel.png 1000x750 -1.20,0.35 -1.0,0.20",
             args[0]
