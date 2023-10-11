@@ -1,6 +1,8 @@
 use num::Complex;
 
-//let mut _verbosity = false;
+use std::sync::Mutex;
+
+static VERBOSITY: Mutex<bool> = Mutex::new(false);
 
 /// Try to determine if `c` is in the Mandelbrot set, using at most `limit`
 /// iterations to decide.
@@ -125,10 +127,18 @@ fn render(
     assert!(pixels.len() == bounds.0 * bounds.1);
     for row in 0..bounds.1 {
         for column in 0..bounds.0 {
+            if *VERBOSITY.lock().unwrap() {
+                println!(
+                    "rendering pixel ({:<4},{:<4}) progress: {:<3}%",
+                    column,
+                    row,
+                    (row * bounds.0 + column + 1) as f32 / (bounds.0 * bounds.1) as f32
+                );
+            }
             let point = pixel_to_point(bounds, (column, row), upper_left, lower_right);
             pixels[row * bounds.0 + column] = match escape_time(point, 255) {
-                None => 255,
-                Some(time_count) => time_count as u8,
+                None => 0,
+                Some(time_count) => 255 - time_count as u8,
             }
         }
     }
@@ -159,7 +169,7 @@ use std::env;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() != 5 {
+    if args.len() < 5 {
         eprintln!("Usage: {} FILE PIXELS UPPERLEFT LOWERRIGHT [-V]", args[0]);
         eprintln!("\t-V (optional) verbose output");
         eprintln!(
@@ -167,6 +177,8 @@ fn main() {
             args[0]
         );
         std::process::exit(1);
+    } else if args.len() == 6 && args[5] == "-V" {
+        *VERBOSITY.lock().unwrap() = true;
     }
 
     let bounds: (usize, usize) = parse_pair(&args[2], 'x').expect("error parsing image dimensions");
