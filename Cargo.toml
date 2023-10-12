@@ -1,5 +1,10 @@
 [workspace]
-members = ["rustdebugging", "shownathan", "programming_rust_2e/mandelbrot"]
+members = [
+    "rustdebugging",
+    "shownathan",
+    "programming_rust_2e/mandelbrot",
+    "programming_rust_2e/quickreplace",
+]
 #exclude = [".git", "**/.*", "programming_rust_2e", "**/.vscode"]
 resolver = "2"
 
@@ -9,4 +14,3 @@ resolver = "2"
 # edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
