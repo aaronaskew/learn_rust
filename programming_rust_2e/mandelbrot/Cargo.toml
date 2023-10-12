@@ -7,5 +7,7 @@ description = "The Mandelbrot example from Programming Rust 2nd Edition Chapter 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+crossbeam = "0.8"
 image = "0.13.0"
 num = "0.4.1"
+num_cpus = "1.16.0"
