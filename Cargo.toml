@@ -5,7 +5,8 @@ members = [
     "programming_rust_2e/quickreplace",
     "wasm-game-of-life",
 ]
-
 resolver = "2"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
