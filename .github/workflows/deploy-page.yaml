@@ -1,10 +1,11 @@
 name: deploy-github-page
 
 on:
-  [
-    workflow_dispatch, 
-    push
-  ]
+  workflow_dispatch:
+  push:
+    paths: 
+      - "wasm-game-of-life/www/**"
+  
 
 permissions:
   contents: write
@@ -20,4 +21,4 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:
           branch: gh-pages
-          folder: www
+          folder: "wasm-game-of-life/www"
