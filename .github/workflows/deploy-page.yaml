@@ -2,9 +2,7 @@ name: deploy-github-page
 
 on:
   workflow_dispatch:
-  push:
-    paths: 
-      - "wasm-game-of-life/www/**"
+  
   
 
 permissions:
