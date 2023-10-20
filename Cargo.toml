@@ -5,12 +5,7 @@ members = [
     "programming_rust_2e/mandelbrot",
     "programming_rust_2e/quickreplace",
 ]
-#exclude = [".git", "**/.*", "programming_rust_2e", "**/.vscode"]
-resolver = "2"
 
-# [package]
-# name = "learn_rust"
-# version = "0.1.0"
-# edition = "2021"
+resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
