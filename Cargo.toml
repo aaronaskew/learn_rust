@@ -3,7 +3,7 @@ members = [
     "rustdebugging",
     "programming_rust_2e/mandelbrot",
     "programming_rust_2e/quickreplace",
-    "rust_and_wasm",
+    "wasm-game-of-life",
 ]
 
 resolver = "2"
