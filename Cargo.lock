@@ -449,6 +449,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56d84fdd47036b038fc80dd333d10b6aab10d5d31f4a366e20014def75328d33"
 
 [[package]]
+name = "rust_and_wasm"
+version = "0.1.0"
+
+[[package]]
 name = "rustdebugging"
 version = "0.1.0"
 
@@ -476,10 +480,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "shownathan"
-version = "0.1.0"
 
 [[package]]
 name = "text-colorizer"

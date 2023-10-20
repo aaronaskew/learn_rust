@@ -1,9 +1,9 @@
 [workspace]
 members = [
     "rustdebugging",
-    "shownathan",
     "programming_rust_2e/mandelbrot",
     "programming_rust_2e/quickreplace",
+    "rust_and_wasm",
 ]
 
 resolver = "2"
