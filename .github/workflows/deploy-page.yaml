@@ -10,8 +10,8 @@ permissions:
 
 jobs:
   build-web:
+    concurrency: ci-${{ github.ref }}
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
