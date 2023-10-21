@@ -144,9 +144,9 @@ fn render(
     }
 }
 
-use image::png::PNGEncoder;
-use image::ColorType;
-use std::fs::File;
+//use image::png::PNGEncoder;
+// use image::ColorType;
+// use std::fs::File;
 
 /// Write the buffer `pixels`, whose dimensions are given by `bounds`, to the
 /// file named `filename`.
@@ -154,14 +154,19 @@ fn write_image(
     filename: &str,
     pixels: &[u8],
     bounds: (usize, usize),
-) -> Result<(), std::io::Error> {
-    let output = File::create(filename)?;
+) -> Result<(), image::ImageError> {
+    //let output = File::create(filename)?;
 
-    let encoder = PNGEncoder::new(output);
+    //encoder.encode(pixels, bounds.0 as u32, bounds.1 as u32, ColorType::Gray(8))?;
 
-    encoder.encode(pixels, bounds.0 as u32, bounds.1 as u32, ColorType::Gray(8))?;
-
-    Ok(())
+    image::save_buffer(
+        filename,
+        pixels,
+        bounds.0 as u32,
+        bounds.1 as u32,
+        // TODO: ensure this looks right
+        image::ColorType::Rgb8,
+    )
 }
 
 use std::env;
