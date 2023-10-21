@@ -9,14 +9,32 @@ permissions:
   contents: write
 
 jobs:
-  build-web:
+  build-webpack:
     concurrency: ci-${{ github.ref }}
     runs-on: ubuntu-latest
+  
+    strategy:
+      matrix:
+        node-version: [21.x]
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4.2.5
-        with:
-          branch: gh-pages
-          folder: "wasm-game-of-life"
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Build
+      run: |
+        cd wasm-game-of-life/www
+        npm install
+        npx webpack --config webpack.config.js
+  
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4.2.5
+      with:
+        branch: gh-pages
+        folder: "wasm-game-of-life/www/dist"

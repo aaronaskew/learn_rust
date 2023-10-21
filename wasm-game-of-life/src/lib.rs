@@ -66,9 +66,9 @@ impl Universe {
                 next.set(
                     idx,
                     match (cell, live_neighbors) {
-                        (true, x) if x < 2 => false,
+                        (true, live_neighbors) if live_neighbors < 2 => false,
                         (true, 2) | (true, 3) => true,
-                        (true, x) if x > 3 => false,
+                        (true, live_neighbors) if live_neighbors > 3 => false,
                         (false, 3) => true,
                         (otherwise, _) => otherwise,
                     },
@@ -89,8 +89,8 @@ impl Universe {
         let mut cells = FixedBitSet::with_capacity(size);
 
         for i in 0..size {
-            // cells.set(i, i % 2 == 0 || i % 7 == 0);
-            cells.set(i, Math::random() < 0.5);
+            cells.set(i, i % 2 == 0 || i % 7 == 0);
+            // cells.set(i, Math::random() < 0.5);
         }
 
         Universe {
