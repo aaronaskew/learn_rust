@@ -1,22 +1,33 @@
 mod utils;
 
 extern crate fixedbitset;
+extern crate web_sys;
 use fixedbitset::FixedBitSet;
-use js_sys::Math;
 use wasm_bindgen::prelude::*;
-use web_sys::console;
 
-// #[wasm_bindgen]
-// #[repr(u8)]
-// #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-// pub enum Cell {
-//     Dead = 0,
-//     Alive = 1,
-// }
+// A macro to provide `println!(..)`-style syntax for `console.log` logging.
+#[allow(unused_macros)]
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
 
 #[wasm_bindgen]
-pub fn log_to_console(s: String) {
-    console::log_1(&s.into());
+//#[repr(u8)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Cell(bool);
+
+impl Cell {
+    const ALIVE: Cell = Cell(true);
+    const DEAD: Cell = Cell(false);
+
+    fn toggle(&mut self) {
+        *self = match *self {
+            Cell::ALIVE => Cell::DEAD,
+            Cell::DEAD => Cell::ALIVE,
+        };
+    }
 }
 
 #[wasm_bindgen]
@@ -28,8 +39,147 @@ pub struct Universe {
 
 #[wasm_bindgen]
 impl Universe {
+    pub fn new() -> Universe {
+        utils::set_panic_hook();
+
+        let width = 64;
+        let height = 64;
+
+        let size = (width * height) as usize;
+        let mut cells = FixedBitSet::with_capacity(size);
+
+        for i in 0..size {
+            // cells.set(i, i % 2 == 0 || i % 7 == 0);
+            cells.set(i, js_sys::Math::random() < 0.5);
+        }
+
+        Universe {
+            width,
+            height,
+            cells,
+        }
+    }
+
+    pub fn toggle_cell(&mut self, row: u32, col: u32) {
+        let idx = self.get_index(row, col);
+        let mut cell = Cell(self.cells[idx]);
+        cell.toggle();
+        self.cells.set(idx, cell.0);
+    }
+
+    /// Set the width of the universe.
+    ///
+    /// Resets all cells to the dead state.
+    pub fn set_width(&mut self, width: u32) {
+        self.width = width;
+        let size: usize = (self.height * self.width) as usize;
+        self.cells = FixedBitSet::with_capacity(size);
+        for i in 0..size {
+            self.cells.set(i, false);
+        }
+    }
+
+    /// Set the height of the universe.
+    ///
+    /// Resets all cells to the dead state.
+    pub fn set_height(&mut self, height: u32) {
+        self.height = height;
+        let size: usize = (self.height * self.width) as usize;
+        self.cells = FixedBitSet::with_capacity(size);
+        for i in 0..size {
+            self.cells.set(i, false);
+        }
+    }
+
     fn get_index(&self, row: u32, col: u32) -> usize {
         (row * self.width + col) as usize
+    }
+
+    fn get_index_with_offset(
+        &self,
+        center_row: u32,
+        center_col: u32,
+        row_offset: i32,
+        col_offset: i32,
+    ) -> usize {
+        assert!(
+            col_offset.unsigned_abs() <= self.width && row_offset.unsigned_abs() <= self.height,
+            "out of bounds!"
+        );
+
+        let row = (center_row as i32 + row_offset + self.height as i32) as u32 % self.height;
+        let col = (center_col as i32 + col_offset + self.width as i32) as u32 % self.width;
+
+        (row * self.width + col) as usize
+    }
+
+    fn insert(
+        &mut self,
+        center_row: u32,
+        center_col: u32,
+        data_height: u32,
+        data_width: u32,
+        data: &[u8],
+    ) {
+        assert!(
+            data_width % 2 == 1 && data_height % 2 == 1,
+            "dimensions must be odd!"
+        );
+        assert!(
+            data_width <= self.width && data_height <= self.height,
+            "too big!"
+        );
+
+        for row_offset in -(data_height as i32 - 1) / 2..=(data_height as i32 - 1) / 2 {
+            for col_offset in -(data_width as i32 - 1) / 2..=(data_width as i32 - 1) / 2 {
+                let universe_idx: usize =
+                    self.get_index_with_offset(center_row, center_col, row_offset, col_offset);
+
+                let data_idx = {
+                    //row * width + col
+                    let data_row = (row_offset + (data_height as i32 - 1) / 2) as u32;
+                    let data_col = (col_offset + (data_width as i32 - 1) / 2) as u32;
+
+                    (data_row * data_width + data_col) as usize
+                };
+
+                self.cells.set(universe_idx, data[data_idx] == 1)
+            }
+        }
+    }
+
+    pub fn insert_glider(&mut self, center_row: u32, center_col: u32) {
+        let mut glider: Vec<u8> = Vec::new();
+
+        glider.append(&mut vec![0, 0, 0, 0, 0]);
+        glider.append(&mut vec![0, 0, 1, 0, 0]);
+        glider.append(&mut vec![0, 0, 0, 1, 0]);
+        glider.append(&mut vec![0, 1, 1, 1, 0]);
+        glider.append(&mut vec![0, 0, 0, 0, 0]);
+
+        self.insert(center_row, center_col, 5, 5, glider.as_slice());
+    }
+
+    pub fn insert_pulsar(&mut self, center_row: u32, center_col: u32) {
+        let mut pulsar = Vec::new();
+
+        pulsar.append(&mut vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        pulsar.append(&mut vec![0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0]);
+        pulsar.append(&mut vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        pulsar.append(&mut vec![0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0]);
+        pulsar.append(&mut vec![0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0]);
+        pulsar.append(&mut vec![0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0]);
+        pulsar.append(&mut vec![0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0]);
+        pulsar.append(&mut vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        pulsar.append(&mut vec![0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0]);
+        pulsar.append(&mut vec![0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0]);
+        pulsar.append(&mut vec![0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0]);
+        pulsar.append(&mut vec![0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0]);
+        pulsar.append(&mut vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        pulsar.append(&mut vec![0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0]);
+        pulsar.append(&mut vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+        self.insert(center_row, center_col, 15, 15, pulsar.as_slice());
     }
 
     fn live_neighbor_count(&self, row: u32, col: u32) -> u8 {
@@ -63,6 +213,14 @@ impl Universe {
                 let cell = self.cells[idx];
                 let live_neighbors = self.live_neighbor_count(row, col);
 
+                // log!(
+                //     "cell[{}, {}] is initially {:?} and has {} live neighbors",
+                //     row,
+                //     col,
+                //     cell,
+                //     live_neighbors
+                // );
+
                 next.set(
                     idx,
                     match (cell, live_neighbors) {
@@ -73,31 +231,12 @@ impl Universe {
                         (otherwise, _) => otherwise,
                     },
                 );
+
+                // log!("    it becomes {:?}", next[idx]);
             }
         }
 
         self.cells = next;
-    }
-
-    pub fn new() -> Universe {
-        utils::set_panic_hook();
-
-        let width = 64;
-        let height = 64;
-
-        let size = (width * height) as usize;
-        let mut cells = FixedBitSet::with_capacity(size);
-
-        for i in 0..size {
-            cells.set(i, i % 2 == 0 || i % 7 == 0);
-            // cells.set(i, Math::random() < 0.5);
-        }
-
-        Universe {
-            width,
-            height,
-            cells,
-        }
     }
 
     pub fn render(&self) -> String {
@@ -136,5 +275,21 @@ impl fmt::Display for Universe {
         }
 
         Ok(())
+    }
+}
+
+impl Universe {
+    /// Get the dead and alive values of the entire universe.
+    pub fn get_cells(&self) -> &FixedBitSet {
+        &self.cells
+    }
+
+    /// Set cells to be alive in a universe by passing the row and column
+    /// of each cell as an array.
+    pub fn set_cells(&mut self, cells: &[(u32, u32)]) {
+        for (row, col) in cells.iter().cloned() {
+            let idx = self.get_index(row, col);
+            self.cells.set(idx, true);
+        }
     }
 }
