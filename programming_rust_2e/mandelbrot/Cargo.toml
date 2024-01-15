@@ -8,6 +8,6 @@ description = "The Mandelbrot example from Programming Rust 2nd Edition Chapter 
 
 [dependencies]
 crossbeam = "0.8"
-image = "0.24.7"
+image = "0.24.8"
 num = "0.4.1"
 num_cpus = "1.16.0"
